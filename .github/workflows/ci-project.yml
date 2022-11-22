@@ -7,27 +7,29 @@ on:
     branches: ["master"]
 
 jobs:
-  build-angular:
+  deploy:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x]
-
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - run: npm ci
-      - run: npm run build --if-present
+          node-version: 16
 
-  build-docker-image:
-    runs-on: ubuntu-latest
+      - name: Install dependencies
+        run: npm install
 
-    steps:
-      - uses: actions/checkout@v3
+      - name: Build
+        run: npm run build
+
+      - name: "Upload Artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: "after build artifact"
+          path: dist/angular
+          retention-days: 5
+
       - name: Build the Docker image
         run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
